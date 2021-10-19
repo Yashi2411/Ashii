@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="04934ead-8d72-4285-9be3-bd4f32870342" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="453ca9a0-b213-4e57-bd45-e1a8afeaaf9c" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<flow name="apdevexamplesFlow" doc:id="22530040-d7e4-480c-9741-d4c2d7608f16" >
+		<http:listener doc:name="GET /hello" doc:id="40d7bbc3-fe00-4da4-8353-07542a45fcf8" config-ref="HTTP_Listener_config" path="/hello" responseStreamingMode="ALWAYS" allowedMethods=" GET">
+			<repeatable-in-memory-stream bufferUnit="MB" />
+			<reconnect />
+			<http:response reasonPhrase="Success" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"name" : vars.firstName
+}]]]></http:headers>
+			</http:response>
+			<http:error-response reasonPhrase="Success">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"name" : "max"
+}]]]></http:headers>
+			</http:error-response>
+		</http:listener>
+		<set-payload value="Hello" doc:name="Hello" doc:id="801687bd-6e89-4c14-a522-7c9e8c908a72" />
+		<logger level="INFO" doc:name="payload" doc:id="eb1f93ea-8e5e-4b99-a321-52fc1c2187b3" message="#[payload]"/>
+	</flow>
+	<flow name="apdevexamplesFlow1" doc:id="5bc401d5-f6e7-4214-9704-c0eb6b9f45a8" >
+		<http:listener doc:name="goodbyeFlow" doc:id="c4284dd4-e418-497b-957a-f6cf164a969d" config-ref="HTTP_Listener_config" path="/goodbye" allowedMethods=" GET"/>
+		<set-variable value="#[message.attributes.queryParams.fname]" doc:name="firstName" doc:id="1966235a-90e5-4eb0-9003-447927c43633" variableName="firstName"/>
+		<set-payload value="#[upper('Goodbye')]" doc:name="Goodbye" doc:id="d39d6925-6971-45c5-8654-9e6f47381c4e" />
+		<http:request method="GET" doc:name="GET /goodbye" doc:id="3381db34-ba58-450b-b504-64181cf26b7d" config-ref="HTTP_Request_configuration" path=" /goodbye" responseTimeout="300000">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"fullname" : "maxmule"
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="payload" doc:id="b2bd9488-7d98-4ae6-b572-2de5562f790e" />
+	</flow>
+</mule>
